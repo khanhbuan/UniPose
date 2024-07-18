@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from torch.utils.data import Dataset
-import Transform
+from src.data.components import Transform
 
 def gaussian_kernel(size_w, size_h, center_x, center_y, sigma):
     gridy, gridx = np.mgrid[0:size_h, 0:size_w]

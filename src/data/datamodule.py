@@ -5,7 +5,6 @@ from src.data.components.lsp import LSP_Data
 from src.data.components.transformed_dataset import transformed_dataset
 from torch.utils.data import DataLoader, Dataset, random_split
 
-
 class LSPDataModule(LightningDataModule):
     def __init__(
         self,
