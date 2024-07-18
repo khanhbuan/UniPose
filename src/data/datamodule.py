@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, Tuple
 import torch
 from lightning import LightningDataModule
 from src.data.components.lsp import LSP_Data
+from src.data.components.transformed_dataset import transformed_dataset
 from torch.utils.data import DataLoader, Dataset, random_split
 
 
@@ -36,13 +37,16 @@ class LSPDataModule(LightningDataModule):
 
         # load and split datasets only if not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
-            dataset = LSP_Data(self.hparams.data_dir, self.hparams.stride, self.hparams.sigma)
+            lsp = LSP_Data(self.hparams.data_dir)            
             
-            self.data_train, self.data_val, self.data_test = random_split(
-                dataset=dataset,
+            train, val, test = random_split(
+                dataset=lsp,
                 lengths=self.hparams.train_val_test_split,
                 generator=torch.Generator().manual_seed(42),
             )
+            self.data_train = transformed_dataset(train, self.hparams.stride, self.hparams.sigma, mode="train")
+            self.data_val = transformed_dataset(val, self.hparams.stride, self.hparams.sigma, mode="val")
+            self.data_test = transformed_dataset(test, self.hparams.stride, self.hparams.sigma, mode="test")
 
     def train_dataloader(self) -> DataLoader[Any]:
         return DataLoader(

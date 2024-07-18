@@ -1,6 +1,8 @@
+import torch
 import cv2
 import numpy as np
-from src.data.components.lsp import LSP_Data
+from src.models.modelmodule import UniPoseModule
+from src.models.components.unipose import unipose
 
 def get_kpts(maps, img_h = 368.0, img_w = 368.0):
 
@@ -35,8 +37,8 @@ def draw_paints(im, kpts):
     """
            #       RED           GREEN          BLACK          CYAN           YELLOW          PINK
     colors = [[000,000,255], [000,255,000], [000,000,000], [255,255,000], [000,255,255], [255,000,255], \
-              [000,255,000], [255,000,000], [255,255,000], [255,000,255], [000,000,128], [128,128,128], [000,000,255], [255,000,255]]
-           #     GREEN           BLUE           CYAN          PINK            NAVY          GRAY           RED            MAGENTA 
+              [000,255,000], [255,000,000], [255,255,000], [255,000,255], [128,000,000], [128,128,128], [000,000,255], [181,61,253]]
+           #     GREEN           BLUE           CYAN           PINK            NAVY           GRAY           RED          MAGENTA 
     
     for idx, k in enumerate(kpts):
         x = k[0]
@@ -45,17 +47,26 @@ def draw_paints(im, kpts):
     cv2.imwrite('output.png', im)
 
 if __name__ == "__main__":
-    dataset = LSP_Data("./data/lsp", 8, 3)
-    img, heat = dataset.__getitem__(0)
+    ckpt_path="/mnt/apple/k66/khanh/UniPose/logs/train/runs/2024-07-17_22-01-11/checkpoints/epoch_036.ckpt"
+    model = UniPoseModule.load_from_checkpoint(net=unipose(), checkpoint_path=ckpt_path)
+    model.eval()
+
+    img_path = "./data/lsp/images/im00028.jpg"
+    # img_path = "./test.jpg"
+    img = cv2.resize(cv2.imread(img_path), (368, 368))
+    render_img = img
+    
+    img = torch.from_numpy(np.array(img, dtype=np.float32).transpose(2, 0, 1))
 
     mean = [128.0, 128.0, 128.0]
     std = [256.0, 256.0, 256.0]
     for t, m, s in zip(img, mean, std):
-        t.mul_(s).add_(m)
-
-    img = np.array(img).transpose(1, 2, 0)
+        t.sub_(m).div_(s)
     
-    heat = heat[None,:,:,:]
+    img = img[None,:,:,:]
+    
+    input = img.to("cuda")
+    heat = model(input) 
+    
     kpts = get_kpts(heat)
-
-    draw_paints(img, kpts)
+    draw_paints(render_img, kpts)

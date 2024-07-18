@@ -1,4 +1,6 @@
+import copy
 import cv2
+import random
 import torch
 import numbers
 import collections
@@ -57,7 +59,38 @@ class Resized(object):
     def __call__(self, img, kpt, center):
         ratio = self.get_params(img, self.size)
         return resize(img, kpt, center, ratio)
+
+def hflip(img, kpt, center):
+    _, width, _ = img.shape
+
+    img = img[:, ::-1, :]
+
+    num = len(kpt)
+    for i in range(num):
+        if kpt[i][2] == 1:      # visible
+            kpt[i][0] = width - 1 - kpt[i][0]
     
+    center[0] = width - 1 - center[0]
+
+    swap_pair = [[0, 5], [1, 4], [2, 3], [6, 11], [7, 10], [8, 9]]
+
+    for x in swap_pair:
+        temp_point = copy.deepcopy(kpt[x[0]])
+        kpt[x[0]] = kpt[x[1]]
+        kpt[x[1]] = temp_point
+    
+    return np.ascontiguousarray(img), kpt, center
+
+class RandomHorizontalFlip(object):
+    def __init__(self, p=0.5):
+        self.prob = p
+    
+    def __call__(self, img, kpt, center):
+        if random.random() < self.prob:
+            return hflip(img, kpt, center)
+        else:
+            return img, kpt, center
+
 class Compose(object):
     def __init__(self, transforms):
         self.transforms = transforms
