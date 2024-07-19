@@ -49,8 +49,8 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         layers = [3, 4, 23]
         blocks = [1, 2, 4]
-        strides = [1, 2, 2, 1]
-        dilations = [1, 1, 1, 2]
+        strides = [1, 2, 1, 1]
+        dilations = [1, 1, 2, 4]
         planes = [64, 128, 256, 512]
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size = 7, 
@@ -135,8 +135,8 @@ class ResNet(nn.Module):
         x = self.layer1(x)      # (256, 92, 92)
         low_level_feat = x      # (256, 92, 92)
         x = self.layer2(x)      # (512, 46, 46)
-        x = self.layer3(x)      # (1024, 23, 23)
-        x = self.layer4(x)      # (2048, 23, 23)
+        x = self.layer3(x)      # (1024, 46, 46)
+        x = self.layer4(x)      # (2048, 46, 46)
         return x, low_level_feat
 
 def ResNet101(pretrained=True):

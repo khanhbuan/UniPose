@@ -31,7 +31,7 @@ class wasp(nn.Module):
     def __init__(self):
         super(wasp, self).__init__()
         inplanes = 2048
-        dilations = [24, 18, 12, 6]
+        dilations = [6, 12, 18, 24]
 
         self.aspp1 = _AtrousModule(inplanes=inplanes, planes=256, kernel_size=1, 
                                    padding=0, dilation=dilations[0])
